@@ -42,8 +42,26 @@ class ReservationScreen extends StatelessWidget {
                   Text('Reservation Time: ${reservations[index].reservationTime}'),
                   Text('Total Price: ${reservations[index].totalPrice}'),
                   const SizedBox(height: 10),
-                  (reservations[index].menuItems?.isNotEmpty??false)?Text('Menu Items: ${BlocProvider.of<RestaurantCubit>(context).customerMenus.firstWhere((element) => element.id == reservations[index].menuItems?[0]).name}'):Container(),
-                  (reservations[index].desertItems?.isNotEmpty??false)?Text('Desert Items: ${BlocProvider.of<RestaurantCubit>(context).customerDeserts.firstWhere((element) => element.id == reservations[index].desertItems?[0]).name}'):Container(),
+                  (reservations[index].menuItems?.isNotEmpty??false)?Row(
+                    children: [
+                      Text('Menu Items: ('),
+                      ...(reservations[index].menuItems??[]).map((e) {
+                        return Text("${BlocProvider.of<RestaurantCubit>(context).customerMenus.firstWhere((element) => element.id == (e)).name}, ");
+                      }),
+                      Text(')'),
+                    ],
+                  ):Container(),
+                  (reservations[index].desertItems?.isNotEmpty??false)?Row(
+                    children: [
+                      Text('Desert Items: ('),
+                      ...(reservations[index].desertItems??[]).map((e) {
+                        return Text("${BlocProvider.of<RestaurantCubit>(context).customerDeserts.firstWhere((element) => element.id == (e)).name}, ");
+                      }),
+                      Text(')'),
+                    ],
+                  ):Container(),
+                  //(reservations[index].menuItems?.isNotEmpty??false)?Text('Menu Items: ${BlocProvider.of<RestaurantCubit>(context).customerMenus.firstWhere((element) => element.id == reservations[index].menuItems?[0]).name}'):Container(),
+                  //(reservations[index].desertItems?.isNotEmpty??false)?Text('Desert Items: ${BlocProvider.of<RestaurantCubit>(context).customerDeserts.firstWhere((element) => element.id == reservations[index].desertItems?[0]).name}'):Container(),
                   const SizedBox(height: 10),
                   BlocBuilder<RestaurantCubit, RestaurantState>(
                     builder: (context, state) {

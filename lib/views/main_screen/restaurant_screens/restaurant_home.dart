@@ -84,7 +84,7 @@ class RestaurantHome extends StatelessWidget {
                 Center(child: _buildMenuSection(context.read<RestaurantCubit>().customerMenus, context)),
                 Center(
                     child: _buildSectionTitle(
-                  'Deserts',
+                  'Desserts & Drinks',
                   context,
                   () async {
                     DesertModel? Dessert = await showDialog<DesertModel>(

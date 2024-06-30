@@ -10,6 +10,7 @@ import 'package:restaurant_reservation/business_logic/refresh_token_cubit.dart';
 import 'package:restaurant_reservation/business_logic/restaurant_cubit.dart';
 import 'package:restaurant_reservation/business_logic/signup_cubit.dart';
 import 'package:restaurant_reservation/models/restaurant_profile_model.dart';
+import 'package:restaurant_reservation/onboarding_screen.dart';
 import 'package:restaurant_reservation/views/auth_screens/login_screens/login_screen.dart';
 import 'package:restaurant_reservation/views/auth_screens/signup_screens/sign_up_screen.dart';
 import 'package:restaurant_reservation/views/main_screen/customer_screens/restaurant_details_screen.dart';
@@ -17,6 +18,7 @@ import 'package:restaurant_reservation/views/main_screen/restaurant_screens/prof
 import 'package:restaurant_reservation/views/main_screen/restaurant_screens/reservations_screen.dart';
 import 'package:restaurant_reservation/views/main_screen/restaurant_screens/restaurant_home.dart';
 import 'package:restaurant_reservation/views/notification_screens/notification_screen.dart';
+import 'package:restaurant_reservation/widgets/restaurant_button.dart';
 
 class HomeScreen extends StatelessWidget {
   HomeScreen({super.key});
@@ -164,11 +166,15 @@ class CustomerHome extends StatelessWidget {
                                     context: context,
                                     builder: (context) => const Center(child: CircularProgressIndicator()),
                                   );
+                                  context.read<RestaurantCubit>().SelectedMenus.clear();
+                                  context.read<RestaurantCubit>().orderName = TextEditingController();
+                                  context.read<RestaurantCubit>().SelectedDeserts.clear();
                                   String? token = await BlocProvider.of<RefreshTokenCubit>(context).get_access_token(BlocProvider.of<LoginCubit>(context).loggedUser?.refreshToken ?? '');
                                   await context.read<RestaurantCubit>().getRestaurantTables((context.read<RestaurantCubit>().restaurants[index].id ?? 0).toString(), token ?? '');
                                   await context.read<RestaurantCubit>().getRestaurantMenus((context.read<RestaurantCubit>().restaurants[index].id ?? 0).toString(), token ?? '');
                                   await context.read<RestaurantCubit>().getRestaurantDesert((context.read<RestaurantCubit>().restaurants[index].id ?? 0).toString(), token ?? '');
                                   Navigator.canPop(context) ? Navigator.pop(context) : false;
+
                                   await Navigator.push(
                                     context,
                                     CupertinoPageRoute(
@@ -313,30 +319,36 @@ class CustomDrawer extends StatelessWidget {
               SizedBox(
                 height: (MediaQuery.of(context).size.height - kToolbarHeight) * 0.4,
               ),
-              ListTile(
-                title: const Text(
-                  '- Login',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 20),
+              Padding(
+                padding: const EdgeInsets.only(left: 18.0, right: 18,top: 5),
+                child: RestaurantButton(
+                  title: BlocProvider.of<LoginCubit>(context).loggedUser == null ? 'Login' : 'Logout',
+                  onPressed: () {
+                    if(BlocProvider.of<LoginCubit>(context).loggedUser == null){
+                      Navigator.pushReplacement(
+                        context,
+                        CupertinoPageRoute(
+                          builder: (context) => LoginScreen(),
+                        ),
+                      );
+                    }else{
+                      Navigator.pushReplacement(
+                        context,
+                        CupertinoPageRoute(
+                          builder: (context) => OnboardingScreen(),
+                        ),
+                      );
+                    }
+
+                  },
                 ),
-                onTap: () {
-                  Navigator.pushReplacement(
-                    context,
-                    CupertinoPageRoute(
-                      builder: (context) => LoginScreen(),
-                    ),
-                  );
-                  // Update the state of the app.
-                  // ...
-                },
               ),
-              BlocBuilder<SignupCubit, SignupState>(
-                builder: (signupContext, state) {
-                  return ListTile(
-                    title: const Text(
-                      '- Register',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 20),
-                    ),
-                    onTap: () {
+              BlocBuilder<SignupCubit, SignupState>(builder: (signupContext, state) {
+                return Padding(
+                  padding: const EdgeInsets.only(left: 18.0, right: 18,top: 5),
+                  child: RestaurantButton(
+                    title: 'Register',
+                    onPressed: () {
                       signupContext.read<SignupCubit>().Initialize();
                       Navigator.pushReplacement(
                         context,
@@ -344,78 +356,74 @@ class CustomDrawer extends StatelessWidget {
                           builder: (context) => SignUpScreen(),
                         ),
                       );
-                      // Update the state of the app.
-                      // ...
                     },
-                  );
-                },
-              ),
+                  ),
+                );
+              }),
               BlocProvider.of<LoginCubit>(context).loggedUser?.user?.role != '1'
                   ? BlocBuilder<RestaurantCubit, RestaurantState>(
                       builder: (context, state) {
-                        return ListTile(
-                          title: const Text(
-                            '- Reservations',
-                            style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 20),
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 18.0, left: 18,top: 5),
+                          child: RestaurantButton(
+                            title: 'Reservations',
+                            onPressed: () async {
+                              showDialog(
+                                context: context,
+                                builder: (context) => const Center(child: CircularProgressIndicator()),
+                              );
+                              String? token = await BlocProvider.of<RefreshTokenCubit>(context).get_access_token(BlocProvider.of<LoginCubit>(context).loggedUser?.refreshToken ?? '');
+                              await context.read<RestaurantCubit>().getReservatrions(BlocProvider.of<LoginCubit>(context).loggedUser?.user?.id.toString() ?? '', token ?? '');
+                              Navigator.canPop(context) ? Navigator.pop(context) : false;
+                              Navigator.push(
+                                context,
+                                CupertinoPageRoute(
+                                  builder: (context) => ReservationScreen(reservations: context.read<RestaurantCubit>().reservations),
+                                ),
+                              );
+                            },
                           ),
-                          onTap: () async {
-                            showDialog(
-                              context: context,
-                              builder: (context) => const Center(child: CircularProgressIndicator()),
-                            );
-                            String? token = await BlocProvider.of<RefreshTokenCubit>(context).get_access_token(BlocProvider.of<LoginCubit>(context).loggedUser?.refreshToken ?? '');
-                            await context.read<RestaurantCubit>().getReservatrions(BlocProvider.of<LoginCubit>(context).loggedUser?.user?.id.toString() ?? '', token ?? '');
-                            Navigator.canPop(context) ? Navigator.pop(context) : false;
-                            Navigator.push(
-                              context,
-                              CupertinoPageRoute(
-                                builder: (context) => ReservationScreen(reservations: context.read<RestaurantCubit>().reservations),
-                              ),
-                            );
-                          },
                         );
                       },
                     )
                   : Container(),
-              ListTile(
-                title: const Text(
-                  '- Contact us',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 20),
+              Padding(
+                padding: const EdgeInsets.only(right: 18.0, left: 18,top: 5),
+                child: RestaurantButton(
+                  title: 'Contact us',
+                  onPressed: () {},
                 ),
-                onTap: () {
-                  // Update the state of the app.
-                  // ...
-                },
               ),
               BlocProvider.of<LoginCubit>(context).loggedUser?.user?.role != '1'
                   ? BlocBuilder<ProfileCubit, ProfileState>(
-                builder: (profileContext, state) {
-                  return ListTile(
-                    title: const Text(
-                      '- Profile',
-                      style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600, fontSize: 20),
-                    ),
-                    onTap: () async {
-                      showDialog(
-                        context: context,
-                        builder: (context) => const Center(child: CircularProgressIndicator()),
-                      );
-                      profileContext.read<ProfileCubit>().dispose();
-                      String? token = await BlocProvider.of<RefreshTokenCubit>(context).get_access_token(BlocProvider.of<LoginCubit>(context).loggedUser?.refreshToken ?? '');
-                      await profileContext.read<ProfileCubit>().getProfile(token ?? '', BlocProvider.of<LoginCubit>(context).loggedUser?.user?.id.toString() ?? '');
-                      Navigator.canPop(context) ? Navigator.pop(context) : false;
-                      Navigator.push(
-                        context,
-                        CupertinoPageRoute(
-                          builder: (context) => ProfileScreen(profile: profileContext.read<ProfileCubit>().profile ?? RestaurantProfileModel()),
-                        ),
-                      );
-                      // Update the state of the app.
-                      // ...
-                    },
-                  );
-                },
-              ):Container(),
+                      builder: (profileContext, state) {
+                        return Padding(
+                          padding: const EdgeInsets.only(right: 18.0, left: 18,top: 5),
+                          child: RestaurantButton(
+                            title: 'Profile',
+                            onPressed: () async {
+                              showDialog(
+                                context: context,
+                                builder: (context) => const Center(child: CircularProgressIndicator()),
+                              );
+                              profileContext.read<ProfileCubit>().dispose();
+                              String? token = await BlocProvider.of<RefreshTokenCubit>(context).get_access_token(BlocProvider.of<LoginCubit>(context).loggedUser?.refreshToken ?? '');
+                              await profileContext.read<ProfileCubit>().getProfile(token ?? '', BlocProvider.of<LoginCubit>(context).loggedUser?.user?.id.toString() ?? '');
+                              Navigator.canPop(context) ? Navigator.pop(context) : false;
+                              Navigator.push(
+                                context,
+                                CupertinoPageRoute(
+                                  builder: (context) => ProfileScreen(profile: profileContext.read<ProfileCubit>().profile ?? RestaurantProfileModel()),
+                                ),
+                              );
+                              // Update the state of the app.
+                              // ...
+                            },
+                          ),
+                        );
+                      },
+                    )
+                  : Container(),
             ],
           ),
         ),

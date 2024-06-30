@@ -25,6 +25,12 @@ class RestaurantCubit extends Cubit<RestaurantState> {
   List<RestaurantTablesModel> customerTables = [];
   List<RestaurantDesertModel> customerDeserts = [];
   List<RestaurantMenusModel> customerMenus = [];
+  List<RestaurantMenusModel> SelectedMenus = [];
+  List<RestaurantDesertModel> SelectedDeserts = [];
+  double totalPrice = 0;
+  double dessertPrice = 0;
+  double menuPrice = 0;
+
   List<TablesModel> tables = [];
   List<DesertModel> deserts = [];
   List<MenuModel> menus = [];
@@ -40,6 +46,38 @@ class RestaurantCubit extends Cubit<RestaurantState> {
   RestaurantMenusModel? selectedMenu;
 
   ReservationRequestModel? reservationRequest;
+
+  void selectTable(RestaurantTablesModel? table) {
+    selectedTable = table;
+    emit(Selected());
+  }
+
+  void selectMenus(RestaurantMenusModel value){
+    SelectedMenus.add(value);
+    double pr = double.tryParse(value.price.toString())??0;
+    menuPrice+= pr;
+    totalPrice += pr;
+    emit(Selected());
+  }
+  clearMenuPrice(){
+    totalPrice -= menuPrice;
+    menuPrice = 0;
+    emit(Selected());
+  }
+
+  void selectDesert(RestaurantDesertModel value){
+    SelectedDeserts.add(value);
+    double pr = double.tryParse(value.price.toString())??0;
+    dessertPrice+= pr;
+    totalPrice += pr;
+    emit(Selected());
+  }
+  clearDesertPrice(){
+    totalPrice -= dessertPrice;
+    dessertPrice = 0;
+    emit(Selected());
+  }
+
 
   void dispose() {
     customerTables.clear();
@@ -170,40 +208,47 @@ class RestaurantCubit extends Cubit<RestaurantState> {
     }
   }
 
-  void selectTable(RestaurantTablesModel? table) {
-    selectedTable = table;
-    emit(Selected());
-  }
 
-  void selectMenu(RestaurantMenusModel? menu) {
-    selectedMenu = menu;
-    emit(Selected());
-  }
 
-  void selectDesert(RestaurantDesertModel? desert) {
-    selectedDesert = desert;
-    emit(Selected());
-  }
 
-  makeReservation() async {
+  makeReservation(String paymentWay) async {
+    List<int>? desserts = [];
+    double price = 0;
+    for(var v in SelectedDeserts){
+      desserts.add(v.id??0);
+      price += double.tryParse(v.price.toString())??0;
+    }
+    List<int>? menus = [];
+    for(var v in SelectedMenus){
+      menus.add(v.id??0);
+      price += double.tryParse(v.price.toString())??0;
+    }
+    print(price);
+    print(menus);
+    print(desserts);
     reservationRequest = ReservationRequestModel(
-      totalPrice: "${(int.tryParse(selectedDesert?.price??'0')??0) + (int.tryParse(selectedMenu?.price??'0')??0)}",
-      desertItems: selectedDesert?.id.toString(),
-      menuItems: selectedMenu?.id.toString(),
+      totalPrice: price.toString(),
+      desertItems: desserts,
+      menuItems: menus,
       //reservationTime: ,
       restaurant: activeRestaurant?.id.toString(),
       table: selectedTable?.id.toString(),
-      OrderName: orderName.text,
+      OrderName: "${orderName.text} ($paymentWay)",
     );
   }
 
-  Future requestReservation(int userId, String token)async{
+  Future requestReservation(int userId, String token,String paymentWay)async{
     try {
       Map<String, String> headers = {
         'Authorization': 'Bearer $token',
+        'Content-Type': 'application/json'
       };
-      makeReservation();
-      final response = await http.post(Uri.parse('${baseurl}reservations/create/$userId'),body: reservationRequest?.toJson(), headers: headers);
+      makeReservation(paymentWay);
+      final response = await http.post(
+          Uri.parse('${baseurl}reservations/create/$userId'),
+          body: jsonEncode(reservationRequest?.toJson()),
+          headers: headers,
+      );
       print(response.body);
       //var res = json.decode(response.body) as List;
       if (response.statusCode == 201) {

@@ -1,10 +1,10 @@
 class ReservationRequestModel {
   String? restaurant;
-  String? desertItems;
+  List<int>? desertItems;
   String? table;
   DateTime? reservationTime;
   String? totalPrice;
-  String? menuItems;
+  List<int>? menuItems;
   String? OrderName;
 
   ReservationRequestModel(

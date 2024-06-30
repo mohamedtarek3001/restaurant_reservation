@@ -91,9 +91,10 @@ class LoginScreen extends StatelessWidget {
                                       await BlocProvider.of<RestaurantCubit>(context).getRestaurantDesert(context.read<LoginCubit>().RestaurantId??'', token??'');
                                       //Navigator.canPop(context)?Navigator.pop(context):false;
                                     }
-                                    Navigator.pop(context);
+                                    Navigator.popUntil(context,(route) => route.isFirst,);
                                     Navigator.pushReplacement(context, CupertinoPageRoute(builder: (context) => HomeScreen(),));
-                                  }else{
+                                  }
+                                  else{
                                     ScaffoldMessenger.of(context).showSnackBar(
                                       SnackBar(
                                         content: Text(res),

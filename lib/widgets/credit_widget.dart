@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 class CreditCardPaymentForm extends StatefulWidget {
+  const CreditCardPaymentForm({super.key,required this.totalPrice});
+  final totalPrice;
+
+
   @override
   _CreditCardPaymentFormState createState() => _CreditCardPaymentFormState();
 }
@@ -65,6 +69,8 @@ class _CreditCardPaymentFormState extends State<CreditCardPaymentForm> {
                 return null;
               },
             ),
+            SizedBox(height: 25,),
+            Text("Total price is : ${widget.totalPrice} EGP"),
           ],
         ),
       ),
